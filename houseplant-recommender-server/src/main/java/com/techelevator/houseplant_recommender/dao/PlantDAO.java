@@ -2,7 +2,6 @@ package com.techelevator.houseplant_recommender.dao;
 
 import java.util.List;
 import  com.techelevator.houseplant_recommender.model.Plant;
-import com.techelevator.houseplant_recommender.model.PlantIdNotFoundException;
 
 public interface PlantDAO {
 
@@ -16,11 +15,15 @@ public interface PlantDAO {
 	
 	public void deletePlantFromMyPlants(Plant unwantedPlant);
 	
-	public Plant viewPlantDetailsFromMyPlants(Plant selectedPlant);
+	public Plant viewPlantDetails(Plant selectedPlant);
+	
+	public Plant viewMyPlantPlantDetails(Plant selectedPlant);
 
-	List<Plant> recommendPlants(String careDifficulty, String lightNeeds, String prefersHumidity, boolean petSafe,
+	public List<Plant> recommendPlants(String careDifficulty, String lightNeeds, String prefersHumidity, boolean petSafe,
 			boolean unusual, boolean hangingBasket, boolean succulent);
 	
 	public Plant searchByName(String name);
+
+	
 		
 }

@@ -38,7 +38,7 @@ public class PlantJDBCDAO implements PlantDAO {
 			SqlRowSet rowSet = jdbcTemplate.queryForRowSet(sql, searchId);
 		
 			if(rowSet.next()) {
-				randomPlant = mapRowToRandomPlant(rowSet);
+				randomPlant = mapRowToPlant(rowSet);
 				searchIdExists = true;
 			} else {
 				int newSearchId = random.nextInt(100);
@@ -56,19 +56,19 @@ public class PlantJDBCDAO implements PlantDAO {
 		List<Plant> recommendedPlants = new ArrayList();
 		
 		String sql = "SELECT * FROM plants WHERE " +
-					 "care_difficulty = ? && " +
-					 "light_needs = ? && " +
-					 "prefers_humidity = ? && " +
-					 "pet_safe = ? && " +
-					 "is_unusual = ? && " +
-					 "hanging_basket = ? && " +
+					 "care_difficulty = ? AND " +
+					 "light_needs = ? AND " +
+					 "prefers_humidity = ? AND " +
+					 "pet_safe = ? AND " +
+					 "is_unusual = ? AND " +
+					 "hanging_basket = ? AND " +
 					 "is_succulent = ?";
 				
 		SqlRowSet results = jdbcTemplate.queryForRowSet(sql, careDifficulty, lightNeeds, prefersHumidity,
 						petSafe, unusual, hangingBasket, succulent);
         
         while(results.next()) {
-            Plant plant = mapRowToRandomPlant(results);
+            Plant plant = mapRowToPlant(results);
             recommendedPlants.add(plant);
 		
         }
@@ -86,12 +86,12 @@ public class PlantJDBCDAO implements PlantDAO {
 		
 		Plant searchedPlant = new Plant();
 		
-		String sql = "SELECT * FROM plants WHERE plant_name ILIKE ?";
+		String sql = "SELECT * FROM plants WHERE plant_name ILIKE %?%";
 		
 		SqlRowSet rowSet = jdbcTemplate.queryForRowSet(sql, name);
 		
 		if(rowSet.next()) {
-			searchedPlant = mapRowToRandomPlant(rowSet);
+			searchedPlant = mapRowToPlant(rowSet);
 		}
 		
 		return searchedPlant;
@@ -129,14 +129,15 @@ public class PlantJDBCDAO implements PlantDAO {
 	@Override
 	public void deletePlantFromMyPlants(Plant unwantedPlant) {
 		
-		String sql = "DELETE FROM my_plants JOIN plants USING plant_id WHERE plant_name = ?";
+		String sql = "DELETE FROM my_plants WHERE plant_id = " +
+				"(SELECT plant_id FROM plants WHERE plant_name = ?);";
 		
 		jdbcTemplate.update(sql, unwantedPlant.getPlantName());	
 		
 	}
 		
 	@Override
-	public Plant viewPlantDetailsFromMyPlants(Plant selectedPlant) {
+	public Plant viewMyPlantPlantDetails(Plant selectedPlant) {
 		
 		Plant thisPlant = new Plant();
 		
@@ -145,31 +146,44 @@ public class PlantJDBCDAO implements PlantDAO {
         SqlRowSet results = jdbcTemplate.queryForRowSet(sql);
         
         if(results.next()) {
-        thisPlant= mapRowToRandomPlant(results);
+        thisPlant= mapRowToPlant(results);
         }
         return thisPlant;	
 	}
 	
-	
-
-	
-    private Plant mapRowToRandomPlant(SqlRowSet rs) {
-    	
-        Plant randomPlant = new Plant();
+	@Override
+	public Plant viewPlantDetails(Plant selectedPlant) {
+		
+		Plant thisPlant = new Plant();
+		
+		String sql = "SELECT * FROM plants WHERE plant_id = ?;";
+		
+        SqlRowSet results = jdbcTemplate.queryForRowSet(sql);
         
-        randomPlant.setPlantId(rs.getInt("plant_id"));
-        randomPlant.setPlantName(rs.getString("plant_name"));
-        randomPlant.setScientificName(rs.getString("scientific_name"));
-        randomPlant.setCareDifficulty(rs.getString("care_difficulty"));
-        randomPlant.setLightNeeds(rs.getString("light_needs"));
-        randomPlant.setPrefersHumidity(rs.getBoolean("prefers_humidity"));
-        randomPlant.setPetSafe(rs.getBoolean("pet_safe"));
-        randomPlant.setUnusual(rs.getBoolean("is_unusual"));
-        randomPlant.setHangingBasket(rs.getBoolean("hanging_basket"));
-        randomPlant.setSucculent(rs.getBoolean("is_succulent"));
-        randomPlant.setCareInstructions(rs.getString("care_instructions"));
+        if(results.next()) {
+        thisPlant= mapRowToPlant(results);
+        }
+        return thisPlant;	
+	}
 
-        return randomPlant;
+	
+    private Plant mapRowToPlant(SqlRowSet rs) {
+    	
+        Plant plant = new Plant();
+        
+        plant.setPlantId(rs.getInt("plant_id"));
+        plant.setPlantName(rs.getString("plant_name"));
+        plant.setScientificName(rs.getString("scientific_name"));
+        plant.setCareDifficulty(rs.getString("care_difficulty"));
+        plant.setLightNeeds(rs.getString("light_needs"));
+        plant.setPrefersHumidity(rs.getBoolean("prefers_humidity"));
+        plant.setPetSafe(rs.getBoolean("pet_safe"));
+        plant.setUnusual(rs.getBoolean("is_unusual"));
+        plant.setHangingBasket(rs.getBoolean("hanging_basket"));
+        plant.setSucculent(rs.getBoolean("is_succulent"));
+        plant.setCareInstructions(rs.getString("care_instructions"));
+
+        return plant;
     }
 
     
